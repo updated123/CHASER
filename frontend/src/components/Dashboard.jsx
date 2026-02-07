@@ -21,29 +21,36 @@ function Dashboard() {
     try {
       setLoading(true)
       
-      // Wake up backend first with a quick health check
+      // Wake up backend first - Render free tier can take 30-60 seconds
       const backendBase = API_BASE.replace('/api', '')
+      console.log('🌙 Backend might be sleeping, attempting to wake up...')
+      
+      // Try health check with longer timeout for Render wake-up
+      let backendAwake = false
       try {
-        console.log('Waking up backend...')
-        await axios.get(`${backendBase}/health`, { timeout: 10000 })
+        await axios.get(`${backendBase}/health`, { timeout: 60000 }) // 60 second timeout for wake-up
+        backendAwake = true
         console.log('✅ Backend is awake')
       } catch (healthError) {
-        console.warn('⚠️ Health check failed, backend might be sleeping:', healthError.message)
-        // Try to wake it up by hitting the docs endpoint
+        console.warn('⚠️ Health check failed, backend is sleeping. This can take 30-60 seconds on Render free tier.')
+        // Try docs endpoint as alternative wake-up method
         try {
-          await axios.get(`${backendBase}/docs`, { timeout: 15000 })
+          console.log('Trying alternative wake-up method...')
+          await axios.get(`${backendBase}/docs`, { timeout: 60000 })
+          backendAwake = true
           console.log('✅ Backend woke up after docs request')
           // Wait a bit for backend to fully initialize
-          await new Promise(resolve => setTimeout(resolve, 2000))
+          await new Promise(resolve => setTimeout(resolve, 3000))
         } catch (docsError) {
-          console.warn('⚠️ Could not wake backend:', docsError.message)
+          console.warn('⚠️ Backend still waking up. This is normal for Render free tier - can take up to 60 seconds.')
+          // Don't fail yet - try the actual API call anyway
         }
       }
       
-      // Now make the actual API calls with shorter timeout
+      // Now make the actual API calls with longer timeout to account for slow wake-up
       const [statsRes, chasesRes] = await Promise.all([
-        axios.get(`${API_BASE}/dashboard/stats`, { timeout: 15000 }),
-        axios.get(`${API_BASE}/chases/active`, { params: filters, timeout: 15000 })
+        axios.get(`${API_BASE}/dashboard/stats`, { timeout: 45000 }), // 45 seconds
+        axios.get(`${API_BASE}/chases/active`, { params: filters, timeout: 45000 })
       ])
       setStats(statsRes.data)
       setChases(chasesRes.data.items || [])
@@ -64,7 +71,7 @@ function Dashboard() {
       // Show user-friendly error
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         const backendUrl = API_BASE.replace('/api', '')
-        alert(`Backend timeout - Service is likely sleeping.\n\n🔧 Quick Fix:\n1. Open this URL in a new tab: ${backendUrl}/health\n2. Wait 30-60 seconds for backend to wake up\n3. Refresh this page\n\nOr visit: ${backendUrl}/docs to wake it up faster.`)
+        alert(`Backend is taking too long to respond.\n\n⏰ Render Free Tier:\n- Services sleep after 15 min inactivity\n- Can take 30-60 seconds to wake up\n\n🔧 Solutions:\n1. Wait 30-60 seconds and refresh\n2. Open ${backendUrl}/health in new tab to wake it\n3. Consider upgrading Render plan for faster wake-up\n\n💡 Tip: First load after sleep is always slow.`)
       } else if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
         const backendUrl = API_BASE.replace('/api', '')
         const viteUrl = import.meta.env.VITE_API_URL || 'NOT SET'

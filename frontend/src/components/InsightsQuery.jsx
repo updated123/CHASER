@@ -29,17 +29,18 @@ function InsightsQuery() {
       setError(null)
       setResult(null)
 
-      // Wake up backend first if needed
+      // Wake up backend first if needed - Render free tier can take 30-60 seconds
       const backendBase = API_BASE.replace('/api', '')
       try {
-        await axios.get(`${backendBase}/health`, { timeout: 5000 })
+        await axios.get(`${backendBase}/health`, { timeout: 60000 }) // 60s for wake-up
       } catch (e) {
         // Backend might be sleeping, try to wake it
+        console.warn('Backend sleeping, attempting wake-up (this can take 30-60s on Render free tier)')
         try {
-          await axios.get(`${backendBase}/docs`, { timeout: 10000 })
-          await new Promise(resolve => setTimeout(resolve, 2000))
+          await axios.get(`${backendBase}/docs`, { timeout: 60000 })
+          await new Promise(resolve => setTimeout(resolve, 3000))
         } catch (e2) {
-          console.warn('Backend wake-up attempt failed:', e2.message)
+          console.warn('Backend still waking up - proceeding anyway')
         }
       }
 
@@ -50,7 +51,7 @@ function InsightsQuery() {
           headers: {
             'Content-Type': 'application/json',
           },
-          timeout: 20000, // 20 second timeout (reduced from 30)
+          timeout: 45000, // 45 second timeout for Render wake-up
         }
       )
 
@@ -63,7 +64,7 @@ function InsightsQuery() {
       
       if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
         const backendUrl = API_BASE.replace('/api', '')
-        setError(`Backend timeout - Service is sleeping.\n\n🔧 Quick Fix:\n1. Open: ${backendUrl}/health\n2. Wait 30-60 seconds\n3. Try query again`)
+        setError(`Backend timeout - Render free tier can take 30-60 seconds to wake up.\n\n⏰ Please wait and try again, or open ${backendUrl}/health in a new tab to wake it up.`)
       } else if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
         const backendUrl = API_BASE.replace('/api', '')
         setError(`Network Error: Cannot connect to backend.\n\nBackend URL: ${backendUrl}\n\nPossible issues:\n1. Backend is sleeping (visit ${backendUrl}/health to wake it up)\n2. CORS not configured (set ALLOWED_ORIGINS=* in Render)\n3. VITE_API_URL not set correctly in Vercel`)
