@@ -659,13 +659,19 @@ Be friendly and helpful."""
             logger.info(f"[Agent] Tool results count: {len(tool_results)}")
             logger.info(f"[Agent] Extracted {len(all_results)} results from tools")
             
+            # Check if final_answer is an error message
+            if final_answer and ("Error:" in final_answer or "error" in final_answer.lower() or "encountered an error" in final_answer.lower()):
+                logger.warning(f"[Agent] Error detected in final_answer, falling back to insights_engine")
+                # Fallback to non-agentic processing
+                return self.insights_engine.process_natural_language_query(query)
+            
             return {
                 'query': query,
                 'intent': 'agentic_query',
                 'parameters': {},
                 'results': all_results if all_results else ([tr['result'] for tr in tool_results] if tool_results else []),
                 'count': len(all_results) if all_results else (len(tool_results) if tool_results else 0),
-                'summary': final_answer,
+                'summary': final_answer if final_answer else "No answer generated",
                 'confidence': 0.9 if (all_results or tool_results) else 0.5,
                 'tools_used': tools_used,
             }
