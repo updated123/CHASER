@@ -531,10 +531,19 @@ After getting results from tools, provide a clear, actionable answer to the user
             return self.insights_engine.process_natural_language_query(query)
         
         try:
+            # System prompt for the agent
+            system_prompt_text = """You are an expert financial adviser assistant. 
+
+When a user asks a question, use the available tools to answer it. Each tool has a clear description of what it does - select the tool(s) that best match the user's query based on the tool descriptions.
+
+Read the tool descriptions carefully and select the most appropriate tool(s) to answer the query. Extract any parameters (client names, thresholds, dates) from the query and pass them to the tools.
+
+After getting results from tools, provide a clear, actionable answer to the user's question."""
+            
             # Initialize state with system message and user query
             initial_state: AgentState = {
                 "messages": [
-                    SystemMessage(content=system_prompt),
+                    SystemMessage(content=system_prompt_text),
                     HumanMessage(content=query)
                 ],
                 "query": query,
