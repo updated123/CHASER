@@ -531,9 +531,12 @@ After getting results from tools, provide a clear, actionable answer to the user
             return self.insights_engine.process_natural_language_query(query)
         
         try:
-            # Initialize state with user query
+            # Initialize state with system message and user query
             initial_state: AgentState = {
-                "messages": [HumanMessage(content=query)],
+                "messages": [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=query)
+                ],
                 "query": query,
                 "db": self.db,
                 "selected_tools": [],
