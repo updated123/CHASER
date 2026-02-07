@@ -661,12 +661,12 @@ async def get_blocking_items(case_id: int, db: Session = Depends(get_db)):
 async def advance_workflow(case_id: int, db: Session = Depends(get_db)):
     """Manually advance workflow to next stage"""
     logger.info(f"[API] POST /api/workflow/advance/{case_id} - Using mock data")
-        return {
-            'case_id': case_id,
+    return {
+        'case_id': case_id,
         'current_stage': 'pre_meeting',
-            'advanced': False,
+        'advanced': False,
         'message': 'Cannot advance - pending items remain (mock data)'
-        }
+    }
 
 
 @app.get("/api/workflow/annual-reviews")
