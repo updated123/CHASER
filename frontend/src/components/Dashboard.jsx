@@ -30,6 +30,12 @@ function Dashboard() {
       setChases(chasesRes.data.items || [])
     } catch (error) {
       console.error('Error fetching data:', error)
+      console.error('API Base URL:', API_BASE)
+      console.error('Full error:', error.response || error.message)
+      // Show user-friendly error
+      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        alert(`Cannot connect to backend API. Please check:\n1. VITE_API_URL is set in Vercel\n2. Backend is running at: ${API_BASE}\n3. CORS is configured correctly`)
+      }
     } finally {
       setLoading(false)
     }

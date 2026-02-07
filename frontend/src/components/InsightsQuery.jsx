@@ -39,8 +39,13 @@ function InsightsQuery() {
 
       setResult(response.data)
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Error processing query')
+      const errorMsg = err.response?.data?.detail || err.message || 'Error processing query'
+      setError(errorMsg)
       console.error('Query error:', err)
+      console.error('API Base URL:', API_BASE)
+      if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+        setError(`Network Error: Cannot connect to backend. Check VITE_API_URL is set to: ${API_BASE}`)
+      }
     } finally {
       setLoading(false)
     }
