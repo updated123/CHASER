@@ -571,10 +571,9 @@ Read the tool descriptions carefully and select the most appropriate tool(s) to 
 
 After getting results from tools, provide a clear, actionable answer to the user's question."""
             
-            # Initialize state with system message and user query
+            # Initialize state with user query only (system message will be added in agent_node)
             initial_state: AgentState = {
                 "messages": [
-                    SystemMessage(content=system_prompt_text),
                     HumanMessage(content=query)
                 ],
                 "query": query,
