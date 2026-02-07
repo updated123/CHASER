@@ -29,6 +29,20 @@ function InsightsQuery() {
       setError(null)
       setResult(null)
 
+      // Wake up backend first if needed
+      const backendBase = API_BASE.replace('/api', '')
+      try {
+        await axios.get(`${backendBase}/health`, { timeout: 5000 })
+      } catch (e) {
+        // Backend might be sleeping, try to wake it
+        try {
+          await axios.get(`${backendBase}/docs`, { timeout: 10000 })
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        } catch (e2) {
+          console.warn('Backend wake-up attempt failed:', e2.message)
+        }
+      }
+
       const response = await axios.post(
         `${API_BASE}/insights/natural-language?query=${encodeURIComponent(queryToUse)}`,
         null,
@@ -36,7 +50,7 @@ function InsightsQuery() {
           headers: {
             'Content-Type': 'application/json',
           },
-          timeout: 30000, // 30 second timeout
+          timeout: 20000, // 20 second timeout (reduced from 30)
         }
       )
 
@@ -46,7 +60,11 @@ function InsightsQuery() {
       setError(errorMsg)
       console.error('Query error:', err)
       console.error('API Base URL:', API_BASE)
-      if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
+      
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        const backendUrl = API_BASE.replace('/api', '')
+        setError(`Backend timeout - Service is sleeping.\n\n🔧 Quick Fix:\n1. Open: ${backendUrl}/health\n2. Wait 30-60 seconds\n3. Try query again`)
+      } else if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
         const backendUrl = API_BASE.replace('/api', '')
         setError(`Network Error: Cannot connect to backend.\n\nBackend URL: ${backendUrl}\n\nPossible issues:\n1. Backend is sleeping (visit ${backendUrl}/health to wake it up)\n2. CORS not configured (set ALLOWED_ORIGINS=* in Render)\n3. VITE_API_URL not set correctly in Vercel`)
       }

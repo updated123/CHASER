@@ -20,16 +20,30 @@ function Dashboard() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      // First check if backend is accessible
+      
+      // Wake up backend first with a quick health check
+      const backendBase = API_BASE.replace('/api', '')
       try {
-        await axios.get(`${API_BASE.replace('/api', '')}/health`, { timeout: 5000 })
+        console.log('Waking up backend...')
+        await axios.get(`${backendBase}/health`, { timeout: 10000 })
+        console.log('✅ Backend is awake')
       } catch (healthError) {
-        console.warn('Health check failed, backend might be sleeping:', healthError.message)
+        console.warn('⚠️ Health check failed, backend might be sleeping:', healthError.message)
+        // Try to wake it up by hitting the docs endpoint
+        try {
+          await axios.get(`${backendBase}/docs`, { timeout: 15000 })
+          console.log('✅ Backend woke up after docs request')
+          // Wait a bit for backend to fully initialize
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        } catch (docsError) {
+          console.warn('⚠️ Could not wake backend:', docsError.message)
+        }
       }
       
+      // Now make the actual API calls with shorter timeout
       const [statsRes, chasesRes] = await Promise.all([
-        axios.get(`${API_BASE}/dashboard/stats`, { timeout: 30000 }),
-        axios.get(`${API_BASE}/chases/active`, { params: filters, timeout: 30000 })
+        axios.get(`${API_BASE}/dashboard/stats`, { timeout: 15000 }),
+        axios.get(`${API_BASE}/chases/active`, { params: filters, timeout: 15000 })
       ])
       setStats(statsRes.data)
       setChases(chasesRes.data.items || [])
@@ -48,7 +62,10 @@ function Dashboard() {
       })
       
       // Show user-friendly error
-      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        const backendUrl = API_BASE.replace('/api', '')
+        alert(`Backend timeout - Service is likely sleeping.\n\n🔧 Quick Fix:\n1. Open this URL in a new tab: ${backendUrl}/health\n2. Wait 30-60 seconds for backend to wake up\n3. Refresh this page\n\nOr visit: ${backendUrl}/docs to wake it up faster.`)
+      } else if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
         const backendUrl = API_BASE.replace('/api', '')
         const viteUrl = import.meta.env.VITE_API_URL || 'NOT SET'
         alert(`Cannot connect to backend API.\n\nBackend URL: ${backendUrl}\nVITE_API_URL: ${viteUrl}\n\nPossible issues:\n1. VITE_API_URL not set in Vercel (check Settings → Environment Variables)\n2. Backend is sleeping (visit ${backendUrl}/health to wake it up)\n3. CORS not configured (set ALLOWED_ORIGINS=* in Render)\n4. Frontend needs redeploy after setting VITE_API_URL\n\nCheck browser console (F12) for detailed error.`)
