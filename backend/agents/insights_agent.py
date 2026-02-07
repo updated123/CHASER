@@ -56,19 +56,23 @@ class InsightsAgent:
     """Agentic insights system using LangGraph with semantic tool matching"""
     
     def __init__(self, db: Session, llm_service: LLMService):
+        logger.info("[InsightsAgent] Initializing InsightsAgent...")
         # db can be None or mock - insights engine handles it
         self.db = db
         self.llm_service = llm_service
+        logger.info("[InsightsAgent] Creating InsightsEngine...")
         # Insights engine will use mock data if db is mock
         self.insights_engine = InsightsEngine(db, llm_service) if db else None
+        logger.info("[InsightsAgent] Creating ChasingEngine...")
         # Chasing engine for autonomous chasing functionality
         self.chasing_engine = ChasingEngine(db) if db else None
         
         # Initialize Azure OpenAI LLM directly
         if not LANGGRAPH_AVAILABLE:
+            logger.warning("[InsightsAgent] LangGraph not available")
             self.llm = None
         else:
-            import os
+            logger.info("[InsightsAgent] LangGraph available, initializing Azure OpenAI LLM...")
             import os
             self.llm = AzureChatOpenAI(
                 azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
@@ -77,6 +81,7 @@ class InsightsAgent:
                 api_key=os.getenv("AZURE_OPENAI_API_KEY", ""),
                 temperature=0
             )
+            logger.info("[InsightsAgent] Azure OpenAI LLM initialized")
         
         self.tools = self._create_semantic_tools()
         self.workflow = self._build_agentic_workflow() if LANGGRAPH_AVAILABLE else None
