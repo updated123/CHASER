@@ -94,7 +94,7 @@ async def get_active_chases(
     """Get all active chases with filtering"""
     logger.info(f"[API] GET /api/chases/active - Using mock data (filters: type={chase_type}, priority={priority}, status={status})")
     result = MockDataService.get_active_chases()
-    # Apply filters
+            # Apply filters
     if chase_type:
         result['items'] = [item for item in result['items'] if item['chase_type'] == chase_type]
     if priority:
@@ -242,7 +242,7 @@ async def get_high_withdrawal_rate(threshold: float = 4.0, db: Session = Depends
     try:
         llm_service = LLMService()
         engine = InsightsEngine(db, llm_service=llm_service)
-        return {'clients': engine.retired_clients_high_withdrawal_rate(threshold=threshold)}
+    return {'clients': engine.retired_clients_high_withdrawal_rate(threshold=threshold)}
     except Exception as e:
         logger.error(f"[API] Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -359,7 +359,7 @@ async def get_birthdays_this_month(db: Session = Depends(get_db)):
     try:
         llm_service = LLMService()
         engine = InsightsEngine(db, llm_service=llm_service)
-        return {'clients': engine.clients_with_birthdays_this_month()}
+    return {'clients': engine.clients_with_birthdays_this_month()}
     except Exception as e:
         logger.error(f"[API] Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -446,7 +446,7 @@ async def get_promises_to_clients(db: Session = Depends(get_db)):
     try:
         llm_service = LLMService()
         engine = InsightsEngine(db, llm_service=llm_service)
-        return {'promises': engine.promises_to_clients()}
+    return {'promises': engine.promises_to_clients()}
     except Exception as e:
         logger.error(f"[API] Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -520,7 +520,7 @@ async def get_satisfied_clients(years: int = 5, db: Session = Depends(get_db)):
     try:
         llm_service = LLMService()
         engine = InsightsEngine(db, llm_service=llm_service)
-        return engine.satisfied_long_term_clients(years=years)
+    return engine.satisfied_long_term_clients(years=years)
     except Exception as e:
         logger.error(f"[API] Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -582,7 +582,7 @@ async def process_natural_language_query(query: str, db: Session = Depends(get_d
         agent = InsightsAgent(db, llm_service)
         result = agent.process_query(query)
         logger.info(f"[API] Query processed. Tools used: {result.get('tools_used', [])}, Results: {result.get('count', 0)}")
-        return result
+    return result
     except Exception as e:
         logger.error(f"[API] Error processing natural language query: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -661,12 +661,12 @@ async def get_blocking_items(case_id: int, db: Session = Depends(get_db)):
 async def advance_workflow(case_id: int, db: Session = Depends(get_db)):
     """Manually advance workflow to next stage"""
     logger.info(f"[API] POST /api/workflow/advance/{case_id} - Using mock data")
-    return {
-        'case_id': case_id,
+        return {
+            'case_id': case_id,
         'current_stage': 'pre_meeting',
-        'advanced': False,
+            'advanced': False,
         'message': 'Cannot advance - pending items remain (mock data)'
-    }
+        }
 
 
 @app.get("/api/workflow/annual-reviews")

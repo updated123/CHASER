@@ -179,8 +179,8 @@ class InsightsEngine:
         shortfall = target_income - new_projected_income
         
         result = {
-            'client_id': client.id,
-            'client_name': client.name,
+                    'client_id': client.id,
+                    'client_name': client.name,
             'original_retirement_year': original_retirement_year,
             'new_retirement_year': new_retirement_year,
             'years_earlier': years_difference,
