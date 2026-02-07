@@ -64,19 +64,28 @@ allowed_origins_str = os.getenv(
 allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
 # Also allow all origins if ALLOWED_ORIGINS is set to "*"
 if "*" in allowed_origins or os.getenv("ALLOWED_ORIGINS") == "*":
+    # When using wildcard, we can't use allow_credentials=True
+    # So we'll allow all origins explicitly
     allowed_origins = ["*"]
     logger.info("CORS: Allowing all origins (*)")
-
-logger.info(f"CORS: Allowed origins: {allowed_origins}")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,  # Must be False when using wildcard
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+else:
+    logger.info(f"CORS: Allowed origins: {allowed_origins}")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
 # Initialize on startup
 @app.on_event("startup")
