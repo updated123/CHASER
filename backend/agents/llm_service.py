@@ -21,7 +21,7 @@ class LLMService:
     def __init__(self):
         logger.info("Initializing LLM Service with Azure OpenAI")
         try:
-            # Get credentials from environment variables with fallback to provided credentials
+            # Get credentials from environment variables only
             azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "")
             azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-mini")
             api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
@@ -29,6 +29,8 @@ class LLMService:
             
             if not api_key:
                 raise ValueError("AZURE_OPENAI_API_KEY is required")
+            if not azure_endpoint:
+                raise ValueError("AZURE_OPENAI_ENDPOINT is required")
             
             self.llm = AzureChatOpenAI(
                 azure_endpoint=azure_endpoint,

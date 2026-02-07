@@ -5,6 +5,13 @@ import os
 import logging
 import sys
 from fastapi import FastAPI, Depends, HTTPException
+
+# Load environment variables from .env file for local development
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not required in production
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -58,6 +65,9 @@ allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") i
 # Also allow all origins if ALLOWED_ORIGINS is set to "*"
 if "*" in allowed_origins or os.getenv("ALLOWED_ORIGINS") == "*":
     allowed_origins = ["*"]
+    logger.info("CORS: Allowing all origins (*)")
+
+logger.info(f"CORS: Allowed origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,

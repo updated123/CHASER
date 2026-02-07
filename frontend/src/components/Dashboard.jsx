@@ -4,9 +4,7 @@ import StatsCards from './StatsCards'
 import ChaseList from './ChaseList'
 import { RefreshCw, Play } from 'lucide-react'
 import axios from 'axios'
-
-// Get API URL from environment variable, fallback to /api for local dev
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+import { API_BASE } from '../config/api'
 
 function Dashboard() {
   const [stats, setStats] = useState(null)

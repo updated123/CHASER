@@ -1,9 +1,7 @@
 import React, { useState } from 'react'
 import { Search, Sparkles, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import axios from 'axios'
-
-// Get API URL from environment variable, fallback to /api for local dev
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+import { API_BASE } from '../config/api'
 
 const EXAMPLE_QUERIES = [
   "Which clients are underweight in equities relative to their risk profile?",
@@ -49,7 +47,8 @@ function InsightsQuery() {
       console.error('Query error:', err)
       console.error('API Base URL:', API_BASE)
       if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
-        setError(`Network Error: Cannot connect to backend. Check VITE_API_URL is set to: ${API_BASE}`)
+        const backendUrl = API_BASE.replace('/api', '')
+        setError(`Network Error: Cannot connect to backend.\n\nBackend URL: ${backendUrl}\n\nPossible issues:\n1. Backend is sleeping (visit ${backendUrl}/health to wake it up)\n2. CORS not configured (set ALLOWED_ORIGINS=* in Render)\n3. VITE_API_URL not set correctly in Vercel`)
       }
     } finally {
       setLoading(false)
