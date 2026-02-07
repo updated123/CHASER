@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import StatsCards from './StatsCards'
 import ChaseList from './ChaseList'
-import { RefreshCw, Play } from 'lucide-react'
+import { RefreshCw, Play, Power } from 'lucide-react'
 import axios from 'axios'
 import { API_BASE } from '../config/api'
 
@@ -71,7 +71,12 @@ function Dashboard() {
       // Show user-friendly error
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         const backendUrl = API_BASE.replace('/api', '')
-        alert(`Backend is taking too long to respond.\n\n⏰ Render Free Tier:\n- Services sleep after 15 min inactivity\n- Can take 30-60 seconds to wake up\n\n🔧 Solutions:\n1. Wait 30-60 seconds and refresh\n2. Open ${backendUrl}/health in new tab to wake it\n3. Consider upgrading Render plan for faster wake-up\n\n💡 Tip: First load after sleep is always slow.`)
+        const shouldWake = window.confirm(
+          `Backend timeout - Service is sleeping.\n\n⏰ Render Free Tier takes 30-60 seconds to wake up.\n\n🔧 Click OK to wake it up now, or Cancel to try later.\n\nOr visit: ${backendUrl}/health`
+        )
+        if (shouldWake) {
+          wakeBackend()
+        }
       } else if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
         const backendUrl = API_BASE.replace('/api', '')
         const viteUrl = import.meta.env.VITE_API_URL || 'NOT SET'
@@ -83,6 +88,25 @@ function Dashboard() {
   }
 
   const [useLangGraph, setUseLangGraph] = useState(true)
+  const [wakingBackend, setWakingBackend] = useState(false)
+
+  const wakeBackend = async () => {
+    setWakingBackend(true)
+    const backendBase = API_BASE.replace('/api', '')
+    try {
+      console.log('🌙 Manually waking up backend...')
+      // Try health endpoint
+      await axios.get(`${backendBase}/health`, { timeout: 90000 }) // 90 seconds
+      console.log('✅ Backend is awake!')
+      alert('✅ Backend is now awake! Refreshing data...')
+      await fetchData()
+    } catch (error) {
+      console.error('Backend wake-up failed:', error)
+      alert('⚠️ Backend is still waking up. This can take 30-60 seconds on Render free tier.\n\nPlease wait and try again, or visit:\n' + backendBase + '/health')
+    } finally {
+      setWakingBackend(false)
+    }
+  }
 
   const runAutonomousCycle = async () => {
     try {
@@ -151,6 +175,17 @@ function Dashboard() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </button>
+          {API_BASE.includes('render.com') && (
+            <button
+              onClick={wakeBackend}
+              disabled={wakingBackend}
+              className="inline-flex items-center px-4 py-2 border border-orange-300 rounded-md shadow-sm text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 disabled:opacity-50"
+              title="Wake up sleeping backend (Render free tier)"
+            >
+              <Power className={`w-4 h-4 mr-2 ${wakingBackend ? 'animate-spin' : ''}`} />
+              {wakingBackend ? 'Waking...' : 'Wake Backend'}
+            </button>
+          )}
           <div className="flex items-center space-x-2">
             <label className="flex items-center space-x-2 text-sm text-gray-700">
               <input
