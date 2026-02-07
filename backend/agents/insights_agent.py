@@ -10,7 +10,7 @@ try:
     from langgraph.graph import StateGraph, END
     from langgraph.prebuilt import ToolNode
     from langchain_core.tools import StructuredTool
-    from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, BaseMessage
+    from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, BaseMessage, SystemMessage
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
     from langchain_openai import AzureChatOpenAI
     LANGGRAPH_AVAILABLE = True
@@ -294,9 +294,29 @@ After getting results from tools, provide a clear, actionable answer to the user
         # Agent node - LLM with tools bound
         def agent_node(state: AgentState):
             messages = state["messages"]
+            
+            # Build message list with system message first
+            message_list = []
+            
+            # Add system message if not already present
+            has_system = any(isinstance(m, SystemMessage) for m in messages)
+            if not has_system:
+                message_list.append(SystemMessage(content=system_prompt))
+            
+            # Add all other messages in order
+            # LangGraph/ToolNode should maintain proper order (AI with tool_calls before ToolMessages)
+            for msg in messages:
+                if not isinstance(msg, SystemMessage):  # Skip system messages, we add our own
+                    message_list.append(msg)
+            
             # LLM automatically selects tools based on descriptions
-            response = llm_with_tools.invoke(messages)
-            return {"messages": [response]}
+            try:
+                response = llm_with_tools.invoke(message_list)
+                return {"messages": [response]}
+            except Exception as e:
+                logger.error(f"Error in agent_node: {e}", exc_info=True)
+                # Fallback: return a simple response
+                return {"messages": [AIMessage(content="I encountered an error processing your request. Please try again.")]}
         
         # Tool execution node
         tool_node = ToolNode(self.tools) if ToolNode else None
