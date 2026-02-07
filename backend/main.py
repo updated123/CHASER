@@ -63,8 +63,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Initialize on startup
@@ -80,6 +81,11 @@ async def startup_event():
 @app.get("/")
 async def root():
     return {"message": "Agentic Chaser API", "version": "1.0.0"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "agentic-chaser-api"}
 
 
 @app.get("/api/dashboard/stats")

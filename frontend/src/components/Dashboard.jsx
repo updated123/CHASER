@@ -22,9 +22,16 @@ function Dashboard() {
   const fetchData = async () => {
     try {
       setLoading(true)
+      // First check if backend is accessible
+      try {
+        await axios.get(`${API_BASE.replace('/api', '')}/health`, { timeout: 5000 })
+      } catch (healthError) {
+        console.warn('Health check failed, backend might be sleeping:', healthError.message)
+      }
+      
       const [statsRes, chasesRes] = await Promise.all([
-        axios.get(`${API_BASE}/dashboard/stats`),
-        axios.get(`${API_BASE}/chases/active`, { params: filters })
+        axios.get(`${API_BASE}/dashboard/stats`, { timeout: 30000 }),
+        axios.get(`${API_BASE}/chases/active`, { params: filters, timeout: 30000 })
       ])
       setStats(statsRes.data)
       setChases(chasesRes.data.items || [])
@@ -34,7 +41,8 @@ function Dashboard() {
       console.error('Full error:', error.response || error.message)
       // Show user-friendly error
       if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
-        alert(`Cannot connect to backend API. Please check:\n1. VITE_API_URL is set in Vercel\n2. Backend is running at: ${API_BASE}\n3. CORS is configured correctly`)
+        const backendUrl = API_BASE.replace('/api', '')
+        alert(`Cannot connect to backend API.\n\nBackend URL: ${backendUrl}\n\nPossible issues:\n1. Backend is sleeping (visit ${backendUrl}/docs to wake it up)\n2. CORS not configured (set ALLOWED_ORIGINS=* in Render)\n3. Network connectivity issue\n\nCheck browser console (F12) for details.`)
       }
     } finally {
       setLoading(false)
