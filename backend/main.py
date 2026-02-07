@@ -606,15 +606,19 @@ async def process_natural_language_query(query: str, db: Session = Depends(get_d
     logger.info(f"[API] POST /api/insights/natural-language - Query: {query[:100]}...")
     
     try:
+        logger.info("[API] Initializing LLM Service...")
         llm_service = LLMService()
+        logger.info("[API] LLM Service initialized, creating InsightsAgent...")
         # Use InsightsAgent which handles both insights and chasing
         from agents.insights_agent import InsightsAgent
         agent = InsightsAgent(db, llm_service)
+        logger.info(f"[API] InsightsAgent created, processing query: {query[:100]}...")
         result = agent.process_query(query)
         logger.info(f"[API] Query processed. Tools used: {result.get('tools_used', [])}, Results: {result.get('count', 0)}")
         return result
     except Exception as e:
         logger.error(f"[API] Error processing natural language query: {e}", exc_info=True)
+        logger.error(f"[API] Error type: {type(e).__name__}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

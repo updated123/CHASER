@@ -557,6 +557,10 @@ Always aim to be helpful, proactive, and compliant with FCA Consumer Duty requir
     
     def process_query(self, query: str) -> Dict:
         """Process query using agentic workflow - LLM selects tools directly based on descriptions"""
+        logger.info(f"[InsightsAgent] process_query called with query: {query[:100]}...")
+        logger.info(f"[InsightsAgent] LANGGRAPH_AVAILABLE: {LANGGRAPH_AVAILABLE}")
+        logger.info(f"[InsightsAgent] workflow exists: {self.workflow is not None}")
+        
         if not LANGGRAPH_AVAILABLE or not self.workflow:
             logger.warning("LangGraph not available, using fallback")
             return self.insights_engine.process_natural_language_query(query)
