@@ -32,9 +32,14 @@ function InsightsQuery() {
       setResult(null)
 
       const response = await axios.post(
-        `${API_BASE}/insights/natural-language`,
+        `${API_BASE}/insights/natural-language?query=${encodeURIComponent(queryToUse)}`,
         null,
-        { params: { query: queryToUse } }
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000, // 30 second timeout
+        }
       )
 
       setResult(response.data)
