@@ -124,7 +124,17 @@ function Dashboard() {
   if (loading && !stats) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">Loading...</div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div>
+            <p className="text-lg font-medium text-gray-900">Loading dashboard...</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {API_BASE.includes('render.com') 
+                ? '⏰ Backend may be waking up (30-60 seconds on Render free tier)'
+                : 'Connecting to backend...'}
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
