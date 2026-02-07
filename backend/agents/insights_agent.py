@@ -298,24 +298,34 @@ After getting results from tools, provide a clear, actionable answer to the user
             # Build message list with system message first
             message_list = []
             
-            # System prompt text (same as defined above)
-            sys_prompt = """You are an expert financial adviser assistant. 
+            # System prompt text - comprehensive for financial advisor context
+            sys_prompt = """You are an expert AI assistant for UK Independent Financial Advisors (IFAs).
 
-When a user asks a question, use the available tools to answer it. Each tool has a clear description of what it does - select the tool(s) that best match the user's query based on the tool descriptions.
+Your role is to help advisors be proactive by answering questions about their client base, identifying opportunities, managing compliance, and tracking follow-ups.
 
-Read the tool descriptions carefully and select the most appropriate tool(s) to answer the query. Extract any parameters (client names, thresholds, dates) from the query and pass them to the tools.
+You have access to tools that can:
+- Analyze client portfolios and investment positions
+- Identify clients needing reviews or follow-ups
+- Find clients with specific characteristics or life events
+- Retrieve conversation history and recommendations
+- Track documents and action items
+- Provide business insights and analytics
 
-After getting results from tools, provide a clear, actionable answer to the user's question."""
+When answering queries:
+1. Select the most appropriate tool(s) based on the query
+2. Extract any parameters (client names, dates, thresholds) from the query
+3. Use multiple tools if needed to fully answer the question
+4. Provide clear, actionable answers that help the advisor take action
+5. Be specific with client names, dates, and recommendations when available
+
+Always aim to be helpful, proactive, and compliant with FCA Consumer Duty requirements."""
             
-            # Add system message if not already present
-            has_system = any(isinstance(m, SystemMessage) for m in messages)
-            if not has_system:
-                message_list.append(SystemMessage(content=sys_prompt))
+            # Always add system message first
+            message_list.append(SystemMessage(content=sys_prompt))
             
-            # Add all other messages in order
-            # LangGraph/ToolNode should maintain proper order (AI with tool_calls before ToolMessages)
+            # Add all other messages in order (excluding any existing system messages)
             for msg in messages:
-                if not isinstance(msg, SystemMessage):  # Skip system messages, we add our own
+                if not isinstance(msg, SystemMessage):
                     message_list.append(msg)
             
             # LLM automatically selects tools based on descriptions
