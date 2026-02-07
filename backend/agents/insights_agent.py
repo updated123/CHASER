@@ -320,14 +320,24 @@ After getting results from tools, provide a clear, actionable answer to the user
             
             # LLM automatically selects tools based on descriptions
             try:
+                logger.info(f"[agent_node] Invoking LLM with {len(message_list)} messages")
+                logger.info(f"[agent_node] Message types: {[type(m).__name__ for m in message_list]}")
+                logger.info(f"[agent_node] Number of tools: {len(self.tools)}")
                 response = llm_with_tools.invoke(message_list)
+                logger.info(f"[agent_node] LLM response received: {type(response).__name__}")
+                if hasattr(response, 'tool_calls') and response.tool_calls:
+                    logger.info(f"[agent_node] Response has {len(response.tool_calls)} tool calls")
                 return {"messages": [response]}
             except Exception as e:
                 logger.error(f"Error in agent_node: {e}", exc_info=True)
+                logger.error(f"Error type: {type(e).__name__}")
                 logger.error(f"Message list length: {len(message_list)}")
                 logger.error(f"Message types: {[type(m).__name__ for m in message_list]}")
-                # Fallback: return a simple response
-                return {"messages": [AIMessage(content="I encountered an error processing your request. Please try again.")]}
+                logger.error(f"LLM available: {self.llm is not None}")
+                logger.error(f"Tools available: {len(self.tools) if self.tools else 0}")
+                # Return error message that will be caught and handled
+                error_msg = f"Error: {str(e)}"
+                return {"messages": [AIMessage(content=error_msg)]}
         
         # Tool execution node
         tool_node = ToolNode(self.tools) if ToolNode else None
