@@ -298,10 +298,19 @@ After getting results from tools, provide a clear, actionable answer to the user
             # Build message list with system message first
             message_list = []
             
+            # System prompt text (same as defined above)
+            sys_prompt = """You are an expert financial adviser assistant. 
+
+When a user asks a question, use the available tools to answer it. Each tool has a clear description of what it does - select the tool(s) that best match the user's query based on the tool descriptions.
+
+Read the tool descriptions carefully and select the most appropriate tool(s) to answer the query. Extract any parameters (client names, thresholds, dates) from the query and pass them to the tools.
+
+After getting results from tools, provide a clear, actionable answer to the user's question."""
+            
             # Add system message if not already present
             has_system = any(isinstance(m, SystemMessage) for m in messages)
             if not has_system:
-                message_list.append(SystemMessage(content=system_prompt))
+                message_list.append(SystemMessage(content=sys_prompt))
             
             # Add all other messages in order
             # LangGraph/ToolNode should maintain proper order (AI with tool_calls before ToolMessages)
@@ -315,6 +324,8 @@ After getting results from tools, provide a clear, actionable answer to the user
                 return {"messages": [response]}
             except Exception as e:
                 logger.error(f"Error in agent_node: {e}", exc_info=True)
+                logger.error(f"Message list length: {len(message_list)}")
+                logger.error(f"Message types: {[type(m).__name__ for m in message_list]}")
                 # Fallback: return a simple response
                 return {"messages": [AIMessage(content="I encountered an error processing your request. Please try again.")]}
         
