@@ -49,10 +49,15 @@ logger.info("=" * 60)
 
 # CORS middleware for frontend
 # Get allowed origins from environment variable (comma-separated)
-allowed_origins = os.getenv(
+allowed_origins_str = os.getenv(
     "ALLOWED_ORIGINS",
     "http://localhost:3000,http://localhost:5173"
-).split(",")
+)
+# Split and strip whitespace
+allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+# Also allow all origins if ALLOWED_ORIGINS is set to "*"
+if "*" in allowed_origins or os.getenv("ALLOWED_ORIGINS") == "*":
+    allowed_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
