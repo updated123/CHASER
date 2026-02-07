@@ -36,11 +36,22 @@ function Dashboard() {
     } catch (error) {
       console.error('Error fetching data:', error)
       console.error('API Base URL:', API_BASE)
+      console.error('VITE_API_URL:', import.meta.env.VITE_API_URL || 'NOT SET')
       console.error('Full error:', error.response || error.message)
+      console.error('Error code:', error.code)
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers
+      })
+      
       // Show user-friendly error
       if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
         const backendUrl = API_BASE.replace('/api', '')
-        alert(`Cannot connect to backend API.\n\nBackend URL: ${backendUrl}\n\nPossible issues:\n1. Backend is sleeping (visit ${backendUrl}/docs to wake it up)\n2. CORS not configured (set ALLOWED_ORIGINS=* in Render)\n3. Network connectivity issue\n\nCheck browser console (F12) for details.`)
+        const viteUrl = import.meta.env.VITE_API_URL || 'NOT SET'
+        alert(`Cannot connect to backend API.\n\nBackend URL: ${backendUrl}\nVITE_API_URL: ${viteUrl}\n\nPossible issues:\n1. VITE_API_URL not set in Vercel (check Settings → Environment Variables)\n2. Backend is sleeping (visit ${backendUrl}/health to wake it up)\n3. CORS not configured (set ALLOWED_ORIGINS=* in Render)\n4. Frontend needs redeploy after setting VITE_API_URL\n\nCheck browser console (F12) for detailed error.`)
       }
     } finally {
       setLoading(false)
