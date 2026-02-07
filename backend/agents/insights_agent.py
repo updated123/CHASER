@@ -661,6 +661,18 @@ Be friendly and helpful."""
             }
         except Exception as e:
             logger.error(f"Error in agentic processing: {e}", exc_info=True)
+            logger.error(f"Query was: {query}")
             # Fallback to traditional method
-            return self.insights_engine.process_natural_language_query(query)
+            try:
+                return self.insights_engine.process_natural_language_query(query)
+            except Exception as fallback_error:
+                logger.error(f"Fallback also failed: {fallback_error}", exc_info=True)
+                return {
+                    "query": query,
+                    "intent": "error",
+                    "confidence": 0,
+                    "results": [],
+                    "summary": f"Error processing query. Please try again or check logs.",
+                    "tools_used": []
+                }
 
